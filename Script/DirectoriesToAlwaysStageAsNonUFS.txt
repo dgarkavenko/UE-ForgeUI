@@ -1,0 +1,66 @@
+TL;DR: “DirectoriesToAlwaysStageAsNonUFS” tells Unreal’s packager to copy a folder into the packaged build as loose files (not inside .pak/.utoc). Adding your plugin’s Script folder here ensures those files (e.g., Python/Lua scripts, JSON, cfgs) are available at runtime via normal file I/O. It’s for things that must not be cooked/UFStored and often must stay readable by external runtimes.
+
+What it means (and why it’s needed)
+
+UFS vs NonUFS:
+
+UFS (Unreal File System) files are cooked and packed into paks/ucas; great for assets you load through Unreal.
+
+NonUFS files are copied “as-is” next to your executable; perfect for external interpreters/tools or anything you read with standard file APIs.
+
+Scripts usually need NonUFS: Interpreters (Python/Lua), external tooling, or processes outside Unreal can’t read from paks. Staging your plugin’s Script folder as NonUFS keeps them loose and discoverable.
+
+How to add the folder (two easy ways)
+
+A) Via Project Settings (UI)
+
+In the Unreal Editor: Edit → Project Settings → Packaging.
+
+Find “Additional Non-Asset Directories to Package” (this maps to DirectoriesToAlwaysStageAsNonUFS).
+
+Click Add, then browse to your plugin’s folder, e.g.:
+
+Project plugin: YourProject/Plugins/YourPlugin/Script
+
+Engine plugin: <Engine>/Plugins/YourPlugin/Script (works, but prefer project plugins when possible).
+
+Save. On the next package, the folder will be copied into the staged build.
+
+B) Via config (.ini)
+Add this to Config/DefaultGame.ini (recommended) under the packaging settings section:
+
+[/Script/UnrealEd.ProjectPackagingSettings]
++DirectoriesToAlwaysStageAsNonUFS=(Path="Plugins/YourPlugin/Script")
+
+
+Use a relative path from the project root when possible.
+
+If it’s an engine plugin you can provide an absolute path, but keep in mind portability across machines.
+
+How to use those files at runtime
+
+Access them with normal file APIs (C++ or Blueprint nodes that touch the filesystem). Typical C++ helpers:
+
+IPluginManager::Get().FindPlugin("YourPlugin")->GetBaseDir() then append "/Script".
+
+Or FPaths::ProjectPluginsDir() and build the path yourself.
+
+Don’t reference these files via Content/ asset paths—they’re not cooked assets.
+
+Where they end up
+
+After packaging, look in your staged/cooked build:
+.../StagedBuilds/<Platform>/<ProjectName>/Plugins/YourPlugin/Script/...
+(Exact layout varies slightly by platform, but they’ll be loose files alongside your build, not inside paks.)
+
+Gotchas & good practice
+
+No secrets: NonUFS files are not encrypted—don’t put credentials/keys there.
+
+Case & platform rules: Keep filenames lowercase/safe for consoles.
+
+Folder name check: Your plugin may use Script or Scripts—match the real folder name.
+
+Version control: Add the path to your project’s .ini so teammates/build agents package it consistently.
+
+If you tell me the plugin name and where its Script folder lives, I can draft the exact .ini line for you.
