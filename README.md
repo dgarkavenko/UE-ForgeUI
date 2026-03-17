@@ -96,8 +96,6 @@ UCommonUIExtensions::PushContentToLayer_ForPlayer(
 | `UForgeGameViewportClient` | `UCommonGameViewportClient` | Viewport client for CommonUI input routing |
 | `UForgeActivatableWidget` | `UCommonActivatableWidget` | Activatable widget with simplified input mode config (Default/Game/Menu/GameAndMenu) |
 | `UForgeButtonBase` | `UCommonButtonBase` | Button with text override, input-method-aware text refresh, and style callbacks |
-| `UForgeTabButtonBase` | `UForgeButtonBase` | Tab button with icon support via `UCommonLazyImage` |
-| `UForgeTabListWidgetBase` | `UCommonTabListWidgetBase` | Tab list with tab descriptors, dynamic registration, and visibility management |
 
 ## Dependencies
 
