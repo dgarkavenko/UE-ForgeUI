@@ -2,7 +2,7 @@
 
 #include "Modules/ModuleManager.h"
 
-class FForgeUIModule : public IModuleInterface
+class FForgeryUIModule : public IModuleInterface
 {
 public:
 	virtual void StartupModule() override {}

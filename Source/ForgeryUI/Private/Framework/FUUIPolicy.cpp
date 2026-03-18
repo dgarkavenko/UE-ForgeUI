@@ -1,8 +1,8 @@
-#include "Framework/ForgeUIPolicy.h"
+#include "Framework/FUUIPolicy.h"
 
 #include "GameUIManagerSubsystem.h"
 
-UWorld* UForgeUIPolicy::GetWorld() const
+UWorld* UFUUIPolicy::GetWorld() const
 {
 	if (const UGameUIManagerSubsystem* UIManager = Cast<UGameUIManagerSubsystem>(GetOuter()))
 	{

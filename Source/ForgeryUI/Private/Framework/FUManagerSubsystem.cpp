@@ -1,27 +1,27 @@
-#include "Framework/ForgeManagerSubsystem.h"
+#include "Framework/FUManagerSubsystem.h"
 
 #include "CommonLocalPlayer.h"
 #include "PrimaryGameLayout.h"
 #include "GameFramework/HUD.h"
 #include "GameUIPolicy.h"
 
-UForgeManagerSubsystem::UForgeManagerSubsystem()
+UFUManagerSubsystem::UFUManagerSubsystem()
 {
 }
 
-void UForgeManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UFUManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UForgeManagerSubsystem::Tick), 0.0f);
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UFUManagerSubsystem::Tick), 0.0f);
 }
 
-void UForgeManagerSubsystem::Deinitialize()
+void UFUManagerSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
 	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
 }
 
-bool UForgeManagerSubsystem::Tick(float DeltaTime)
+bool UFUManagerSubsystem::Tick(float DeltaTime)
 {
 	const UGameUIPolicy* Policy = GetCurrentUIPolicy();
 

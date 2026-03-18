@@ -1,15 +1,15 @@
-#include "Widgets/ForgeButtonBase.h"
+#include "Widgets/FUButtonBase.h"
 
 #include "CommonActionWidget.h"
 
-void UForgeButtonBase::SetButtonText(const FText& InText)
+void UFUButtonBase::SetButtonText(const FText& InText)
 {
 	bOverride_ButtonText = InText.IsEmpty();
 	ButtonText = InText;
 	RefreshButtonText();
 }
 
-void UForgeButtonBase::NativePreConstruct()
+void UFUButtonBase::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
@@ -17,7 +17,7 @@ void UForgeButtonBase::NativePreConstruct()
 	RefreshButtonText();
 }
 
-void UForgeButtonBase::UpdateInputActionWidget()
+void UFUButtonBase::UpdateInputActionWidget()
 {
 	Super::UpdateInputActionWidget();
 
@@ -25,13 +25,13 @@ void UForgeButtonBase::UpdateInputActionWidget()
 	RefreshButtonText();
 }
 
-void UForgeButtonBase::OnInputMethodChanged(ECommonInputType CurrentInputType)
+void UFUButtonBase::OnInputMethodChanged(ECommonInputType CurrentInputType)
 {
 	Super::OnInputMethodChanged(CurrentInputType);
 	UpdateButtonStyle();
 }
 
-void UForgeButtonBase::RefreshButtonText()
+void UFUButtonBase::RefreshButtonText()
 {
 	if (bOverride_ButtonText || ButtonText.IsEmpty())
 	{

@@ -2,13 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "CommonButtonBase.h"
-#include "ForgeButtonBase.generated.h"
+#include "FUButtonBase.generated.h"
 
 /**
  * Button base with text override support and input-method-aware text refresh.
  */
 UCLASS(Abstract, BlueprintType, Blueprintable)
-class FORGEUI_API UForgeButtonBase : public UCommonButtonBase
+class FORGERYUI_API UFUButtonBase : public UCommonButtonBase
 {
 	GENERATED_BODY()
 

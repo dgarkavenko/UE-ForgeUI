@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
-#include "ForgeActivatableWidget.generated.h"
+#include "FUActivatableWidget.generated.h"
 
 UENUM(BlueprintType)
-enum class EForgeInputMode : uint8
+enum class EFUInputMode : uint8
 {
 	Default,
 	GameAndMenu,
@@ -17,7 +17,7 @@ enum class EForgeInputMode : uint8
  * Base activatable widget with simplified input mode configuration.
  */
 UCLASS()
-class FORGEUI_API UForgeActivatableWidget : public UCommonActivatableWidget
+class FORGERYUI_API UFUActivatableWidget : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
@@ -27,7 +27,7 @@ public:
 protected:
 	/** The desired input mode to use while this UI is activated. */
 	UPROPERTY(EditDefaultsOnly, Category = Input)
-	EForgeInputMode InputConfig = EForgeInputMode::Default;
+	EFUInputMode InputConfig = EFUInputMode::Default;
 
 	/** The desired mouse behavior when the game gets input. */
 	UPROPERTY(EditDefaultsOnly, Category = Input)

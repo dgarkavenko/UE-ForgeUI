@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class ForgeUI : ModuleRules
+public class ForgeryUI : ModuleRules
 {
-	public ForgeUI(ReadOnlyTargetRules Target) : base(Target)
+	public ForgeryUI(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 

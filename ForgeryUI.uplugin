@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "ForgeUI",
+	"FriendlyName": "ForgeryUI",
 	"Description": "Standalone Lyra-style 4-layer UI stack system built on CommonUI and CommonGame. Drop-in UI framework for any UE5 project.",
 	"Category": "UI",
 	"CreatedBy": "",
@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "ForgeUI",
+			"Name": "ForgeryUI",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

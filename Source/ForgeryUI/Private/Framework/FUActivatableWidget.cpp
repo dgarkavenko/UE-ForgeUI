@@ -1,16 +1,16 @@
-#include "Framework/ForgeActivatableWidget.h"
+#include "Framework/FUActivatableWidget.h"
 
-TOptional<FUIInputConfig> UForgeActivatableWidget::GetDesiredInputConfig() const
+TOptional<FUIInputConfig> UFUActivatableWidget::GetDesiredInputConfig() const
 {
 	switch (InputConfig)
 	{
-	case EForgeInputMode::GameAndMenu:
+	case EFUInputMode::GameAndMenu:
 		return FUIInputConfig(ECommonInputMode::All, GameMouseCaptureMode);
-	case EForgeInputMode::Game:
+	case EFUInputMode::Game:
 		return FUIInputConfig(ECommonInputMode::Game, GameMouseCaptureMode);
-	case EForgeInputMode::Menu:
+	case EFUInputMode::Menu:
 		return FUIInputConfig(ECommonInputMode::Menu, EMouseCaptureMode::NoCapture);
-	case EForgeInputMode::Default:
+	case EFUInputMode::Default:
 	default:
 		return Super::GetDesiredInputConfig();
 	}

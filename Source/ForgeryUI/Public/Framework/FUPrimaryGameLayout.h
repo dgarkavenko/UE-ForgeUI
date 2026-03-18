@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "PrimaryGameLayout.h"
-#include "ForgePrimaryGameLayout.generated.h"
+#include "FUPrimaryGameLayout.generated.h"
 
 /**
  * Primary game layout with 4 UI layer stacks:
@@ -12,7 +12,7 @@
  * - Modal: modal dialogs / popups
  */
 UCLASS()
-class FORGEUI_API UForgePrimaryGameLayout : public UPrimaryGameLayout
+class FORGERYUI_API UFUPrimaryGameLayout : public UPrimaryGameLayout
 {
 	GENERATED_BODY()
 
