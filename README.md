@@ -1,19 +1,19 @@
-# ForgeUI
+# ForgeryUI
 
-A standalone, Lyra-style 4-layer UI stack plugin for Unreal Engine 5. Built on top of CommonUI and CommonGame, ForgeUI provides a ready-to-use UI layer architecture: drop it into any UE5 project, set the policy in config, and get a working layered UI stack system with HUD visibility sync and input mode management.
+A standalone, Lyra-style 4-layer UI stack plugin for Unreal Engine 5. Built on top of CommonUI and CommonGame, ForgeryUI provides a ready-to-use UI layer architecture: drop it into any UE5 project, set the policy in config, and get a working layered UI stack system with HUD visibility sync and input mode management.
 
 ## Layer Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│  Modal Layer (ForgeUI.Layer.Modal)      │  <- Top: dialogs, confirmations
-├─────────────────────────────────────────┤
-│  Menu Layer (ForgeUI.Layer.Menu)        │  <- Main menu, frontend screens
-├─────────────────────────────────────────┤
-│  GameMenu Layer (ForgeUI.Layer.GameMenu)│  <- Pause, inventory, settings
-├─────────────────────────────────────────┤
-│  Game Layer (ForgeUI.Layer.Game)        │  <- Bottom: HUD, in-game widgets
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│  Modal Layer (ForgeryUI.Layer.Modal)        │  <- Top: dialogs, confirmations
+├─────────────────────────────────────────────┤
+│  Menu Layer (ForgeryUI.Layer.Menu)          │  <- Main menu, frontend screens
+├─────────────────────────────────────────────┤
+│  GameMenu Layer (ForgeryUI.Layer.GameMenu)  │  <- Pause, inventory, settings
+├─────────────────────────────────────────────┤
+│  Game Layer (ForgeryUI.Layer.Game)          │  <- Bottom: HUD, in-game widgets
+└─────────────────────────────────────────────┘
 ```
 
 Each layer is a `UCommonActivatableWidgetStack`. Widgets pushed to higher layers receive input priority and can suspend layers below them.
@@ -22,7 +22,7 @@ Each layer is a `UCommonActivatableWidgetStack`. Widgets pushed to higher layers
 
 ### 1. Enable Plugins
 
-Copy `Plugins/ForgeUI/` into your project. The following plugins must also be present and enabled:
+Copy `Plugins/ForgeryUI/` into your project. The following plugins must also be present and enabled:
 
 - **CommonUI** (Engine plugin)
 - **CommonGame** — provides `UGameUIManagerSubsystem`, `UGameUIPolicy`, `UPrimaryGameLayout`
@@ -32,7 +32,7 @@ Copy `Plugins/ForgeUI/` into your project. The following plugins must also be pr
 Add to your game module's `Build.cs`:
 
 ```csharp
-PublicDependencyModuleNames.Add("ForgeUI");
+PublicDependencyModuleNames.Add("ForgeryUI");
 ```
 
 ### 2. Set Up Project Base Classes
@@ -46,17 +46,17 @@ CommonGame requires your project to use its base classes for GameInstance, Local
 
 
 ### 3. Configure
-In `DefaultEngine.ini`, point the engine to ForgeUI's viewport client:
+In `DefaultEngine.ini`, point the engine to ForgeryUI's viewport client:
 
 ```ini
 [/Script/Engine.Engine]
-GameViewportClientClassName="/Script/ForgeUI.ForgeGameViewportClient"
+GameViewportClientClassName="/Script/ForgeryUI.FUGameViewportClient"
 ```
 
 In `DefaultGame.ini`
 ```ini
-[/Script/ForgeUI.ForgeManagerSubsystem]
-DefaultUIPolicyClass=/ForgeUI/Framework/BP_ForgeUIPolicy.BP_ForgeUIPolicy_C
+[/Script/ForgeryUI.FUManagerSubsystem]
+DefaultUIPolicyClass=/ForgeryUI/Framework/BP_FUUIPolicy.BP_FUUIPolicy_C
 ```
 
 
@@ -64,24 +64,24 @@ DefaultUIPolicyClass=/ForgeUI/Framework/BP_ForgeUIPolicy.BP_ForgeUIPolicy_C
 
 **C++:**
 ```cpp
-#include "Framework/ForgeLayers.h"
+#include "Framework/FULayers.h"
 #include "CommonUIExtensions.h"
 
 UCommonUIExtensions::PushContentToLayer_ForPlayer(
     LocalPlayer,
-    ForgeLayers::TAG_UI_LAYER_MENU,
+    FULayers::TAG_UI_LAYER_MENU,
     UMyMenuWidget::StaticClass()
 );
 ```
 
 **Blueprint:**
-Use the `Push Content to Layer for Player` node, selecting a `ForgeUI.Layer.*` gameplay tag.
+Use the `Push Content to Layer for Player` node, selecting a `ForgeryUI.Layer.*` gameplay tag.
 
 **AngelScript:**
 ```angelscript
 UCommonUIExtensions::PushContentToLayer_ForPlayer(
     LocalPlayer,
-    n"ForgeUI.Layer.Menu",
+    n"ForgeryUI.Layer.Menu",
     MyWidgetClass
 );
 ```
@@ -90,12 +90,12 @@ UCommonUIExtensions::PushContentToLayer_ForPlayer(
 
 | Class | Extends | Purpose |
 |-------|---------|---------|
-| `UForgeUIPolicy` | `UGameUIPolicy` | UI policy with safe `GetWorld()` override (prevents editor CDO crash) |
-| `UForgeManagerSubsystem` | `UGameUIManagerSubsystem` | Manages UI policy lifecycle and syncs HUD visibility with root layout |
-| `UForgePrimaryGameLayout` | `UPrimaryGameLayout` | Root layout with 4 pre-registered layer stacks |
-| `UForgeGameViewportClient` | `UCommonGameViewportClient` | Viewport client for CommonUI input routing |
-| `UForgeActivatableWidget` | `UCommonActivatableWidget` | Activatable widget with simplified input mode config (Default/Game/Menu/GameAndMenu) |
-| `UForgeButtonBase` | `UCommonButtonBase` | Button with text override, input-method-aware text refresh, and style callbacks |
+| `UFUUIPolicy` | `UGameUIPolicy` | UI policy with safe `GetWorld()` override (prevents editor CDO crash) |
+| `UFUManagerSubsystem` | `UGameUIManagerSubsystem` | Manages UI policy lifecycle and syncs HUD visibility with root layout |
+| `UFUPrimaryGameLayout` | `UPrimaryGameLayout` | Root layout with 4 pre-registered layer stacks |
+| `UFUGameViewportClient` | `UCommonGameViewportClient` | Viewport client for CommonUI input routing |
+| `UFUActivatableWidget` | `UCommonActivatableWidget` | Activatable widget with simplified input mode config (Default/Game/Menu/GameAndMenu) |
+| `UFUButtonBase` | `UCommonButtonBase` | Button with text override, input-method-aware text refresh, and style callbacks |
 
 ## Dependencies
 
