@@ -16,9 +16,17 @@ class FORGERYUI_API UFUPrimaryGameLayout : public UPrimaryGameLayout
 {
 	GENERATED_BODY()
 
-	virtual void NativeOnInitialized() override;
+public:
+	UPROPERTY(BlueprintReadWrite)
+	UCommonActivatableWidget* HUDInstance;
 
 protected:
+	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default Widgets")
+	TSubclassOf<UCommonActivatableWidget> HUD;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonActivatableWidgetStack* Game_Stack;
 

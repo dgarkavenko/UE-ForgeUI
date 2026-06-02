@@ -10,4 +10,15 @@ void UFUPrimaryGameLayout::NativeOnInitialized()
 	RegisterLayer(FULayers::TAG_UI_LAYER_GAMEMENU, GameMenu_Stack);
 	RegisterLayer(FULayers::TAG_UI_LAYER_MENU, Menu_Stack);
 	RegisterLayer(FULayers::TAG_UI_LAYER_MODAL, Modal_Stack);
+
+}
+
+void UFUPrimaryGameLayout::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if (HUD != nullptr)
+	{	
+		HUDInstance = PushWidgetToLayerStack(FULayers::TAG_UI_LAYER_GAME, HUD);
+	}
 }
