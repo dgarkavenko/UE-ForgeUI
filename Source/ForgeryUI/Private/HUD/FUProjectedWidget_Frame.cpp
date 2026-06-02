@@ -41,6 +41,15 @@ static bool BuildLocalMeshCorners(const UStaticMesh* StaticMesh, TArray<FVector>
 	return true;
 }
 
+static void TransformLocalCornersInline(const USceneComponent* Source, TArray<FVector>& InOutCorners)
+{
+	const FTransform ComponentTransform = Source->GetComponentTransform();
+	for (FVector& Corner : InOutCorners)
+	{
+		Corner = ComponentTransform.TransformPosition(Corner);
+	}
+}
+
 static bool ResolveActorWorldCorners(USceneComponent* Source, bool bOnlyCollidingComponents, TArray<FVector>& OutWorldCorners)
 {
 	AActor* Owner = Source ? Source->GetOwner() : nullptr;
@@ -56,12 +65,23 @@ static bool ResolveActorWorldCorners(USceneComponent* Source, bool bOnlyCollidin
 	return true;
 }
 
-static bool ResolvePrimitiveWorldCorners(USceneComponent* Source, TArray<FVector>& OutWorldCorners)
+static bool ResolvePrimitiveWorldCorners(USceneComponent* Source, bool bProjectComponentLocalBounds, TArray<FVector>& OutWorldCorners)
 {
 	const UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Source);
 	if (!PrimitiveComponent)
 	{
 		return false;
+	}
+
+	if (bProjectComponentLocalBounds)
+	{
+		const FBoxSphereBounds LocalBounds = PrimitiveComponent->GetLocalBounds();
+		if (!LocalBounds.ContainsNaN())
+		{
+			BuildBoundsCorners(LocalBounds.Origin, LocalBounds.BoxExtent, OutWorldCorners);
+			TransformLocalCornersInline(Source, OutWorldCorners);
+			return true;
+		}
 	}
 
 	BuildBoundsCorners(PrimitiveComponent->Bounds.Origin, PrimitiveComponent->Bounds.BoxExtent, OutWorldCorners);
@@ -153,6 +173,11 @@ void UFUProjectedWidget_Frame::ClearFrameTarget()
 	bHasExplicitFrameTarget = false;
 	bHasFrameRect = false;
 	FrameSize = FVector2D::ZeroVector;
+}
+
+void UFUProjectedWidget_Frame::SetProjectComponentLocalBounds(bool bInProjectComponentLocalBounds)
+{
+	FrameSettings.bProjectComponentLocalBounds = bInProjectComponentLocalBounds;
 }
 
 void UFUProjectedWidget_Frame::NativeOnProjectionLayoutUpdated(const FFUProjectedWidgetLayoutContext& Context)
@@ -268,11 +293,11 @@ bool UFUProjectedWidget_Frame::ResolveFrameTargetWorldCorners(USceneComponent* F
 		{
 			return true;
 		}
-		return ResolvePrimitiveWorldCorners(FrameSource, OutWorldCorners) ||
+		return ResolvePrimitiveWorldCorners(FrameSource, FrameSettings.bProjectComponentLocalBounds, OutWorldCorners) ||
 			ResolveActorWorldCorners(FrameSource, FrameSettings.bOnlyCollidingComponents, OutWorldCorners);
 
 	case EFUProjectedFrameTargetMode::ComponentBounds:
-		return ResolvePrimitiveWorldCorners(FrameSource, OutWorldCorners) ||
+		return ResolvePrimitiveWorldCorners(FrameSource, FrameSettings.bProjectComponentLocalBounds, OutWorldCorners) ||
 			ResolveActorWorldCorners(FrameSource, FrameSettings.bOnlyCollidingComponents, OutWorldCorners);
 
 	case EFUProjectedFrameTargetMode::OwnerActor:

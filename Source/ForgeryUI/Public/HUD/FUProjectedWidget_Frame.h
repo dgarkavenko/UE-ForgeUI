@@ -36,6 +36,9 @@ struct FFUProjectedFrameSettings
 	FLinearColor Tint = FLinearColor::White;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ScriptReadWrite, Category = "Projection|Frame")
+	bool bProjectComponentLocalBounds = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ScriptReadWrite, Category = "Projection|Frame")
 	bool bOnlyCollidingComponents = false;
 };
 
@@ -50,6 +53,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
 	void ClearFrameTarget();
+
+	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
+	void SetProjectComponentLocalBounds(bool bInProjectComponentLocalBounds);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ScriptReadWrite, Category = "Projection|Frame")
 	FFUProjectedFrameSettings FrameSettings;
