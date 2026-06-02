@@ -9,6 +9,8 @@ public class ForgeryUI : ModuleRules
 		PublicDependencyModuleNames.AddRange(new[]
 		{
 			"Core",
+			"CoreUObject",
+			"Engine",
 			"UMG",
 			"Slate",
 			"SlateCore",
@@ -16,12 +18,6 @@ public class ForgeryUI : ModuleRules
 			"CommonInput",
 			"CommonGame",
 			"GameplayTags"
-		});
-
-		PrivateDependencyModuleNames.AddRange(new[]
-		{
-			"CoreUObject",
-			"Engine"
 		});
 	}
 }
