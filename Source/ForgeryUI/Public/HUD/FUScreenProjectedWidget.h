@@ -162,6 +162,8 @@ public:
 	UFUNCTION(BlueprintPure, ScriptCallable, Category = "Projection")
 	EFUProjectedWidgetDistanceState GetDistanceState() const;
 
+	bool UsesSelfManagedSlotLayout() const;
+
 	void SetResolvedProjectionScale(float InResolvedProjectionScale);
 	void SetProjectionClamped(bool bInProjectionClamped, bool bFireEvent);
 	void SetDistanceState(EFUProjectedWidgetDistanceState InDistanceState, bool bFireEvent);
@@ -183,6 +185,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, ScriptReadOnly, Category = "Projection")
 	EFUProjectedWidgetDistanceState DistanceState = EFUProjectedWidgetDistanceState::Normal;
+
+	bool bSelfManagedSlotLayout = false;
 
 	virtual void NativeOnProjectionLayoutUpdated(const FFUProjectedWidgetLayoutContext& Context);
 

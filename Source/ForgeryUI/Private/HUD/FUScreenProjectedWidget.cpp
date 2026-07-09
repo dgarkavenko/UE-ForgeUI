@@ -26,6 +26,11 @@ EFUProjectedWidgetDistanceState UFUScreenProjectedWidget::GetDistanceState() con
 	return DistanceState;
 }
 
+bool UFUScreenProjectedWidget::UsesSelfManagedSlotLayout() const
+{
+	return bSelfManagedSlotLayout;
+}
+
 void UFUScreenProjectedWidget::SetResolvedProjectionScale(float InResolvedProjectionScale)
 {
 	ResolvedProjectionScale = InResolvedProjectionScale;

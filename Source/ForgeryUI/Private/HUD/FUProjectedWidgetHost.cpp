@@ -155,6 +155,7 @@ UFUScreenProjectedWidget* UFUProjectedWidgetHost::RegisterWidget(
 	{
 		ChildSlot->SetAnchors(FAnchors(0.0f, 0.0f, 0.0f, 0.0f));
 		ChildSlot->SetAutoSize(true);
+		ChildSlot->SetZOrder(ZOrder);
 	}
 
 	const int32 Index = Anchors.Add(Anchor);
@@ -317,8 +318,13 @@ void UFUProjectedWidgetHost::NativeTick(const FGeometry& MyGeometry, float InDel
 		const EFUProjectedWidgetDistanceState PreviousDistanceState = DistanceStates[Index];
 		const bool bPreviousClamped = ClampedStates[Index] != 0;
 
+		const bool bSelfManagedSlotLayout = Widget->UsesSelfManagedSlotLayout();
+
 		Widget->SetResolvedProjectionScale(ResolvedScale);
-		Widget->SetRenderScale(FVector2D(ResolvedScale, ResolvedScale));
+		if (!bSelfManagedSlotLayout)
+		{
+			Widget->SetRenderScale(FVector2D(ResolvedScale, ResolvedScale));
+		}
 		ResolvedScales[Index] = ResolvedScale;
 
 		const bool bDistanceStateChanged = !bWasInitialized || PreviousDistanceState != DistanceState;
@@ -381,11 +387,14 @@ void UFUProjectedWidgetHost::NativeTick(const FGeometry& MyGeometry, float InDel
 		ClampedStates[Index] = bClamped;
 		Widget->SetProjectionClamped(bClamped, bClampedChanged);
 
-		if (UCanvasPanelSlot* ChildSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		if (!bSelfManagedSlotLayout)
 		{
-			ChildSlot->SetAlignment(Pivots[Index]);
-			ChildSlot->SetPosition(DrawPosition);
-			ChildSlot->SetZOrder(ZOrders[Index]);
+			if (UCanvasPanelSlot* ChildSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+			{
+				ChildSlot->SetAlignment(Pivots[Index]);
+				ChildSlot->SetPosition(DrawPosition);
+				ChildSlot->SetZOrder(ZOrders[Index]);
+			}
 		}
 
 		Widget->SetVisibility(ESlateVisibility::HitTestInvisible);

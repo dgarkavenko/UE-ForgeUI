@@ -1,14 +1,17 @@
 #include "HUD/FUProjectedWidget_Frame.h"
 
 #include "Blueprint/SlateBlueprintLibrary.h"
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SceneComponent.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/LocalPlayer.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/PlayerController.h"
 #include "Rendering/DrawElements.h"
+#include "SceneView.h"
 
 namespace
 {
@@ -103,17 +106,40 @@ static bool ProjectFrameRect(
 		return false;
 	}
 
+	ULocalPlayer* LocalPlayer = Context.PlayerController->GetLocalPlayer();
+	if (!LocalPlayer || !LocalPlayer->ViewportClient)
+	{
+		return false;
+	}
+
+	FSceneViewProjectionData ProjectionData;
+	if (!LocalPlayer->GetProjectionData(LocalPlayer->ViewportClient->Viewport, ProjectionData))
+	{
+		return false;
+	}
+
+	const FMatrix ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+	const FIntRect ConstrainedViewRect = ProjectionData.GetConstrainedViewRect();
+	const FVector2D ViewRectMin(ConstrainedViewRect.Min.X, ConstrainedViewRect.Min.Y);
+
 	FVector2D MinPosition(TNumericLimits<float>::Max(), TNumericLimits<float>::Max());
 	FVector2D MaxPosition(TNumericLimits<float>::Lowest(), TNumericLimits<float>::Lowest());
 	bool bHasProjectedCorner = false;
 
 	for (const FVector& Corner : WorldCorners)
 	{
-		FVector2D ViewportLocalPosition;
-		if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(Context.PlayerController, Corner, ViewportLocalPosition, true))
+		FVector2D ScreenPosition;
+		if (!FSceneView::ProjectWorldToScreen(Corner, ConstrainedViewRect, ViewProjectionMatrix, ScreenPosition))
 		{
 			continue;
 		}
+
+		ScreenPosition -= ViewRectMin;
+
+		const FVector2D RoundedScreenPosition(FMath::RoundToDouble(ScreenPosition.X), FMath::RoundToDouble(ScreenPosition.Y));
+
+		FVector2D ViewportLocalPosition;
+		USlateBlueprintLibrary::ScreenToViewport(Context.PlayerController, RoundedScreenPosition, ViewportLocalPosition);
 
 		const FVector2D AbsolutePosition = USlateBlueprintLibrary::LocalToAbsolute(Context.ViewportGeometry, ViewportLocalPosition);
 		const FVector2D CanvasLocalPosition = USlateBlueprintLibrary::AbsoluteToLocal(Context.CanvasGeometry, AbsolutePosition);
@@ -159,6 +185,11 @@ static bool ProjectFrameRect(
 }
 }
 
+UFUProjectedWidget_Frame::UFUProjectedWidget_Frame()
+{
+	bSelfManagedSlotLayout = true;
+}
+
 void UFUProjectedWidget_Frame::SetFrameTarget(USceneComponent* Source, int32 ItemIndex)
 {
 	FrameTargetSource = Source;
@@ -182,40 +213,52 @@ void UFUProjectedWidget_Frame::SetProjectComponentLocalBounds(bool bInProjectCom
 
 void UFUProjectedWidget_Frame::NativeOnProjectionLayoutUpdated(const FFUProjectedWidgetLayoutContext& Context)
 {
-	USceneComponent* FrameSource = bHasExplicitFrameTarget ? FrameTargetSource.Get() : ProjectionSource.Get();
-	TArray<FVector> WorldCorners;
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Slot);
 
-	if (!ResolveFrameTargetWorldCorners(FrameSource, WorldCorners))
-	{
-		bHasFrameRect = false;
-		FrameSize = FVector2D::ZeroVector;
-		SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-
-	FVector2D FramePosition;
-	FVector2D NewFrameSize;
-	if (!ProjectFrameRect(Context, WorldCorners, FrameSettings, FramePosition, NewFrameSize))
-	{
-		bHasFrameRect = false;
-		FrameSize = FVector2D::ZeroVector;
-		SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-
-	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Slot))
+	if (CanvasSlot && !bSlotInitialized)
 	{
 		CanvasSlot->SetAutoSize(false);
 		CanvasSlot->SetAlignment(FVector2D::ZeroVector);
-		CanvasSlot->SetPosition(FramePosition);
+		SetRenderScale(FVector2D(1.0f, 1.0f));
+		SetRenderTransformPivot(FVector2D::ZeroVector);
+		bSlotInitialized = true;
+	}
+
+	USceneComponent* FrameSource = bHasExplicitFrameTarget ? FrameTargetSource.Get() : ProjectionSource.Get();
+
+	if (!ResolveFrameTargetWorldCorners(FrameSource, WorldCornersScratch))
+	{
+		bHasFrameRect = false;
+		FrameSize = FVector2D::ZeroVector;
+		SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	FVector2D NewFramePosition;
+	FVector2D NewFrameSize;
+	if (!ProjectFrameRect(Context, WorldCornersScratch, FrameSettings, NewFramePosition, NewFrameSize))
+	{
+		bHasFrameRect = false;
+		FrameSize = FVector2D::ZeroVector;
+		SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	const bool bRectUnchanged =
+		bHasFrameRect &&
+		NewFramePosition.Equals(FramePosition, 0.1f) &&
+		NewFrameSize.Equals(FrameSize, 0.1f);
+
+	if (CanvasSlot && !bRectUnchanged)
+	{
+		CanvasSlot->SetPosition(NewFramePosition);
 		CanvasSlot->SetSize(NewFrameSize);
 	}
 
-	SetRenderScale(FVector2D(1.0f, 1.0f));
-	SetRenderTransformPivot(FVector2D::ZeroVector);
 	SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	bHasFrameRect = true;
+	FramePosition = NewFramePosition;
 	FrameSize = NewFrameSize;
 }
 
@@ -241,19 +284,18 @@ int32 UFUProjectedWidget_Frame::NativePaint(
 	const float Right = FMath::Max(Inset, LocalSize.X - Inset);
 	const float Bottom = FMath::Max(Inset, LocalSize.Y - Inset);
 
-	TArray<FVector2D> Points;
-	Points.Reserve(5);
-	Points.Add(FVector2D(Inset, Inset));
-	Points.Add(FVector2D(Right, Inset));
-	Points.Add(FVector2D(Right, Bottom));
-	Points.Add(FVector2D(Inset, Bottom));
-	Points.Add(FVector2D(Inset, Inset));
+	PaintPointsScratch.Reset(5);
+	PaintPointsScratch.Add(FVector2D(Inset, Inset));
+	PaintPointsScratch.Add(FVector2D(Right, Inset));
+	PaintPointsScratch.Add(FVector2D(Right, Bottom));
+	PaintPointsScratch.Add(FVector2D(Inset, Bottom));
+	PaintPointsScratch.Add(FVector2D(Inset, Inset));
 
 	FSlateDrawElement::MakeLines(
 		OutDrawElements,
 		++MaxLayer,
 		AllottedGeometry.ToPaintGeometry(),
-		Points,
+		PaintPointsScratch,
 		ESlateDrawEffect::None,
 		InWidgetStyle.GetColorAndOpacityTint() * FrameSettings.Tint,
 		true,

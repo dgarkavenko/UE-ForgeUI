@@ -48,6 +48,8 @@ class FORGERYUI_API UFUProjectedWidget_Frame : public UFUScreenProjectedWidget
 	GENERATED_BODY()
 
 public:
+	UFUProjectedWidget_Frame();
+
 	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
 	void SetFrameTarget(USceneComponent* Source, int32 ItemIndex = -1);
 
@@ -70,7 +72,9 @@ private:
 
 	bool bHasFrameRect = false;
 	bool bHasExplicitFrameTarget = false;
+	bool bSlotInitialized = false;
 	int32 FrameTargetItemIndex = INDEX_NONE;
+	FVector2D FramePosition = FVector2D::ZeroVector;
 	FVector2D FrameSize = FVector2D::ZeroVector;
 
 	UPROPERTY(Transient)
@@ -78,6 +82,8 @@ private:
 
 	TWeakObjectPtr<UStaticMesh> CachedLocalBoundsMesh;
 	TArray<FVector> CachedLocalBoundsCorners;
+	TArray<FVector> WorldCornersScratch;
+	mutable TArray<FVector2D> PaintPointsScratch;
 };
 
 // Future batch path: UFUProjectedFrameLayer should draw many FFUProjectedFrameTarget entries
