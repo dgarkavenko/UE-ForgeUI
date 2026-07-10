@@ -136,7 +136,16 @@ UFUScreenProjectedWidget* UFUProjectedWidgetHost::RegisterWidget(
 			AnchorLocalOffsets[Index] = AnchorLocalOffset;
 			AnchorPositions[Index] = Anchor->GetComponentTransform().TransformPosition(AnchorLocalOffset);
 			ScreenOffsets[Index] = ScreenOffset;
-			ZOrders[Index] = ZOrder;
+
+			if (ZOrders[Index] != ZOrder)
+			{
+				ZOrders[Index] = ZOrder;
+				if (UCanvasPanelSlot* ChildSlot = Cast<UCanvasPanelSlot>(ExistingWidget->Slot))
+				{
+					ChildSlot->SetZOrder(ZOrder);
+				}
+			}
+
 			return ExistingWidget;
 		}
 	}

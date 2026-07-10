@@ -253,13 +253,13 @@ void UFUProjectedWidget_Frame::NativeOnProjectionLayoutUpdated(const FFUProjecte
 	{
 		CanvasSlot->SetPosition(NewFramePosition);
 		CanvasSlot->SetSize(NewFrameSize);
+		FramePosition = NewFramePosition;
+		FrameSize = NewFrameSize;
 	}
 
 	SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	bHasFrameRect = true;
-	FramePosition = NewFramePosition;
-	FrameSize = NewFrameSize;
 }
 
 int32 UFUProjectedWidget_Frame::NativePaint(
