@@ -54,6 +54,9 @@ public:
 	void SetFrameTarget(USceneComponent* Source, int32 ItemIndex = -1);
 
 	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
+	void SetFrameTargetWorldBounds(const FBox& WorldBounds);
+
+	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
 	void ClearFrameTarget();
 
 	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection|Frame")
@@ -72,8 +75,10 @@ private:
 
 	bool bHasFrameRect = false;
 	bool bHasExplicitFrameTarget = false;
+	bool bHasExplicitWorldBounds = false;
 	bool bSlotInitialized = false;
 	int32 FrameTargetItemIndex = INDEX_NONE;
+	FBox ExplicitWorldBounds = FBox(ForceInit);
 	FVector2D FramePosition = FVector2D::ZeroVector;
 	FVector2D FrameSize = FVector2D::ZeroVector;
 

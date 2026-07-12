@@ -218,11 +218,6 @@ void UFUProjectedWidgetHost::UnregisterWidget(USceneComponent* Anchor)
 
 void UFUProjectedWidgetHost::UnregisterWidgetInstance(UFUScreenProjectedWidget* Widget)
 {
-	if (!Widget)
-	{
-		return;
-	}
-
 	for (int32 Index = Widgets.Num() - 1; Index >= 0; --Index)
 	{
 		if (Widgets[Index] == Widget)
@@ -247,6 +242,18 @@ UFUProjectedWidget_Frame* UFUProjectedWidgetHost::RegisterFrameWidget(
 
 	TSubclassOf<UFUScreenProjectedWidget> ScreenWidgetClass = WidgetClass.Get();
 	return Cast<UFUProjectedWidget_Frame>(RegisterWidget(Anchor, ScreenWidgetClass, AnchorLocalOffset, ScreenOffset, ZOrder));
+}
+
+void UFUProjectedWidgetHost::UpdateFrameWidget(UFUScreenProjectedWidget* Widget, FVector AnchorLocalOffset)
+{
+	for (int32 Index = Widgets.Num() - 1; Index >= 0; --Index)
+	{
+		if (Widgets[Index] == Widget)
+		{
+			AnchorLocalOffsets[Index] = AnchorLocalOffset;
+			break;
+		}
+	}
 }
 
 void UFUProjectedWidgetHost::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

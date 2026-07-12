@@ -18,7 +18,7 @@ class FORGERYUI_API UFUProjectedWidgetHost : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection")
+	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection", Meta = (DeterminesOutputType = "WidgetClass"))
 	UFUScreenProjectedWidget* RegisterWidget(
 		USceneComponent* Anchor,
 		TSubclassOf<UFUScreenProjectedWidget> WidgetClass,
@@ -32,13 +32,18 @@ public:
 	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection")
 	void UnregisterWidgetInstance(UFUScreenProjectedWidget* Widget);
 
-	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection")
+	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection", Meta = (DeterminesOutputType = "WidgetClass"))
 	UFUProjectedWidget_Frame* RegisterFrameWidget(
 		USceneComponent* Anchor,
 		TSubclassOf<UFUProjectedWidget_Frame> WidgetClass,
 		FVector AnchorLocalOffset = FVector::ZeroVector,
 		FVector2D ScreenOffset = FVector2D::ZeroVector,
 		int32 ZOrder = 0);
+
+	UFUNCTION(BlueprintCallable, ScriptCallable, Category = "Projection")
+	void UpdateFrameWidget(
+		UFUScreenProjectedWidget* Widget,
+		FVector AnchorLocalOffset = FVector::ZeroVector);
 
 protected:
 	virtual void NativeConstruct() override;

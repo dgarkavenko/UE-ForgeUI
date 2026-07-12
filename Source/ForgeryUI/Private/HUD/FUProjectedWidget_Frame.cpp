@@ -195,6 +195,13 @@ void UFUProjectedWidget_Frame::SetFrameTarget(USceneComponent* Source, int32 Ite
 	FrameTargetSource = Source;
 	FrameTargetItemIndex = ItemIndex;
 	bHasExplicitFrameTarget = Source != nullptr;
+	bHasExplicitWorldBounds = false;
+}
+
+void UFUProjectedWidget_Frame::SetFrameTargetWorldBounds(const FBox& WorldBounds)
+{
+	ExplicitWorldBounds = WorldBounds;
+	bHasExplicitWorldBounds = true;
 }
 
 void UFUProjectedWidget_Frame::ClearFrameTarget()
@@ -202,6 +209,7 @@ void UFUProjectedWidget_Frame::ClearFrameTarget()
 	FrameTargetSource = nullptr;
 	FrameTargetItemIndex = INDEX_NONE;
 	bHasExplicitFrameTarget = false;
+	bHasExplicitWorldBounds = false;
 	bHasFrameRect = false;
 	FrameSize = FVector2D::ZeroVector;
 }
@@ -306,6 +314,17 @@ int32 UFUProjectedWidget_Frame::NativePaint(
 
 bool UFUProjectedWidget_Frame::ResolveFrameTargetWorldCorners(USceneComponent* FrameSource, TArray<FVector>& OutWorldCorners)
 {
+	if (bHasExplicitWorldBounds)
+	{
+		if (!ExplicitWorldBounds.IsValid)
+		{
+			return false;
+		}
+
+		BuildBoundsCorners(ExplicitWorldBounds.GetCenter(), ExplicitWorldBounds.GetExtent(), OutWorldCorners);
+		return true;
+	}
+
 	if (!FrameSource)
 	{
 		return false;
