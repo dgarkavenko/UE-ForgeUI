@@ -85,12 +85,6 @@ class UFUProgressBar : UUserWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress Bar|Increase & Decrease Animations")
 	float OffsetSpeed = 0.5f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress Bar|Increase & Decrease Animations")
-	bool bResetInterpolationOnUpdate = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress Bar|Increase & Decrease Animations")
-	bool bResetOffsetTimeOnlyWhenNoAnimation = false;
-
 	UPROPERTY(NotEditable, BlueprintReadOnly, Category = "Progress Bar|Runtime")
 	UMaterialInstanceDynamic ImageMaterialDynamicInstance;
 
@@ -109,6 +103,8 @@ class UFUProgressBar : UUserWidget
 	UPROPERTY(NotEditable, BlueprintReadOnly, Category = "Progress Bar|Runtime")
 	private float CachedMaterialValueOffset = 0.0f;
 
+	private bool bPreviewActive;
+
 	UPROPERTY(BindWidget, VisibleAnywhere, BlueprintReadOnly, Category = "Progress Bar|Runtime")
 	UImage ImageBar;
 
@@ -122,129 +118,145 @@ class UFUProgressBar : UUserWidget
 	UFUNCTION(BlueprintOverride)
 	void Construct()
 	{
-		SetDefautlValues();
+		SetDefaultValues();
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void Tick(FGeometry MyGeometry, float InDeltaTime)
 	{
-		TimeSinceLastValueUpdate += InDeltaTime;
-		bool bEqualValues = Math::IsNearlyEqual(CachedMaterialValue, CachedMaterialValueOffset);
-
-		if (bEqualValues)
+		if (bPreviewActive)
 		{
-			if (bResetOffsetTimeOnlyWhenNoAnimation)
-			{
-				TimeSinceLastValueUpdate = 0;
-			}
-
 			return;
 		}
 
+		if (Math::IsNearlyEqual(CachedMaterialValue, CachedMaterialValueOffset))
+		{
+			return;
+		}
+
+		TimeSinceLastValueUpdate += InDeltaTime;
 		if (TimeSinceLastValueUpdate <= OffsetTime)
 		{
 			return;
 		}
 
-		float& InterpolatedValue = bIsDamaged ? CachedMaterialValueOffset : CachedMaterialValue;
-		float& TargetValue = bIsDamaged ? CachedMaterialValue : CachedMaterialValueOffset;
-		FName CurrentParam = bIsDamaged ? ProgressBarMaterialParams::ValueOffset : ProgressBarMaterialParams::Value;
+		float TargetValue = SegmentRound(Value);
 
-		float InterpValue = Math::FInterpConstantTo(InterpolatedValue, Value, InDeltaTime, OffsetSpeed);
-		float SegmentRoundedValue = bAlwaysFillSegments ? Math::RoundToInt(InterpValue * SegmentNumber) / SegmentNumber : InterpValue;
-
-		ImageMaterialDynamicInstance.SetScalarParameterValue(CurrentParam, SegmentRoundedValue);
-		InterpolatedValue = SegmentRoundedValue;
-		TargetValue = bIsDamaged ? Math::Min(InterpolatedValue, TargetValue) : Math::Max(InterpolatedValue, TargetValue);
-
-
+		if (bIsDamaged)
+		{
+			float InterpValue = Math::FInterpConstantTo(CachedMaterialValueOffset, TargetValue, InDeltaTime, OffsetSpeed);
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, InterpValue);
+			CachedMaterialValueOffset = InterpValue;
+		}
+		else
+		{
+			float InterpValue = Math::FInterpConstantTo(CachedMaterialValue, TargetValue, InDeltaTime, OffsetSpeed);
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, InterpValue);
+			CachedMaterialValue = InterpValue;
+		}
 	}
 
 	void SetValue(float InValue)
 	{
-		if (ImageMaterialDynamicInstance == nullptr)
-		{
-			return;
-		}
-
-		float ClampedValue = Math::Clamp(InValue, 0.f, 1.f);
-		if (Value == ClampedValue)
-		{
-			return;
-		}
-
-		bIsDamaged = ClampedValue < Value;
-		Value = ClampedValue;
-
-		if (bResetOffsetTimeOnlyWhenNoAnimation)
-		{
-			TimeSinceLastValueUpdate = 0;
-		}
-
-		float SegmentRoundedValue = bAlwaysFillSegments ? Math::RoundToInt(Value * SegmentNumber) / SegmentNumber : Value;
-
-		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
-		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
-		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, bIsDamaged ? 1 : 0);
-
-		CachedMaterialValue = SegmentRoundedValue;
-		CachedMaterialValueOffset = SegmentRoundedValue;
+		ApplyValue(InValue, false);
 	}
 
 	void SetValueAnimated(float InValue)
 	{
-		if (ImageMaterialDynamicInstance == nullptr)
-		{
-			return;
-		}
-
-		float ClampedValue = Math::Clamp(InValue, 0.f, 1.f);
-		if (Value == ClampedValue)
-		{
-			return;
-		}
-
-		bIsDamaged = ClampedValue < Value;		
-		Value = ClampedValue;
-
-		if (bResetOffsetTimeOnlyWhenNoAnimation)
-		{
-			TimeSinceLastValueUpdate = 0;
-		}
-
-		float SegmentRoundedValue = bAlwaysFillSegments ? Math::RoundToInt(Value * SegmentNumber) / SegmentNumber : Value;
-
-		if (bIsDamaged)
-		{
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, bIsDamaged ? 1 : 0);
-
-			CachedMaterialValue = SegmentRoundedValue;
-
-			if (bResetInterpolationOnUpdate)
-			{
-				ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
-				CachedMaterialValueOffset = SegmentRoundedValue;
-			}
-		}
-		else
-		{
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, bIsDamaged ? 1 : 0);
-
-			CachedMaterialValueOffset = SegmentRoundedValue;
-
-			if (bResetInterpolationOnUpdate)
-			{
-				ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
-				CachedMaterialValue = SegmentRoundedValue;
-			}
-		}
+		ApplyValue(InValue, true);
 	}
 
 	float GetValue()
 	{
 		return Value;
+	}
+
+	void ShowPreview(float InValue)
+	{
+		if (ImageMaterialDynamicInstance == nullptr)
+		{
+			return;
+		}
+
+		float PreviewValue = SegmentRound(Math::Clamp(InValue, 0.f, 1.f));
+		float CurrentValue = SegmentRound(Value);
+		float PreviewLower = Math::Min(PreviewValue, CurrentValue);
+		float PreviewUpper = Math::Max(PreviewValue, CurrentValue);
+
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, PreviewLower);
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, PreviewUpper);
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, PreviewValue < CurrentValue ? 1 : 0);
+
+		CachedMaterialValue = PreviewLower;
+		CachedMaterialValueOffset = PreviewUpper;
+		bPreviewActive = true;
+	}
+
+	void ClearPreview()
+	{
+		if (ImageMaterialDynamicInstance == nullptr)
+		{
+			return;
+		}
+
+		float SegmentRoundedValue = SegmentRound(Value);
+
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
+
+		CachedMaterialValue = SegmentRoundedValue;
+		CachedMaterialValueOffset = SegmentRoundedValue;
+		bPreviewActive = false;
+	}
+
+	private void ApplyValue(float InValue, bool bAnimated)
+	{
+		if (ImageMaterialDynamicInstance == nullptr)
+		{
+			return;
+		}
+
+		float ClampedValue = Math::Clamp(InValue, 0.f, 1.f);
+		if (Value == ClampedValue)
+		{
+			if (bPreviewActive)
+			{
+				ClearPreview();
+			}
+
+			return;
+		}
+
+		bIsDamaged = ClampedValue < Value;
+		Value = ClampedValue;
+		bPreviewActive = false;
+
+		float SegmentRoundedValue = SegmentRound(Value);
+
+		if (!bAnimated)
+		{
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, bIsDamaged ? 1 : 0);
+
+			CachedMaterialValue = SegmentRoundedValue;
+			CachedMaterialValueOffset = SegmentRoundedValue;
+			return;
+		}
+
+		if (bIsDamaged)
+		{
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
+			CachedMaterialValue = SegmentRoundedValue;
+		}
+		else
+		{
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
+			CachedMaterialValueOffset = SegmentRoundedValue;
+		}
+
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, bIsDamaged ? 1 : 0);
+		TimeSinceLastValueUpdate = 0;
 	}
 
 	private bool TryInstantiateMaterial()
@@ -268,7 +280,7 @@ class UFUProgressBar : UUserWidget
 				return;
 			}
 
-			SetDefautlValues();
+			SetDefaultValues();
 		}
 
 		ImageMaterialDynamicInstance.SetVectorParameterValue(ProgressBarMaterialParams::BackgroundColor, BackgroundColor);
@@ -292,32 +304,21 @@ class UFUProgressBar : UUserWidget
 		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::SegmentSmoothnessSide2, EndSmoothness);
 	}
 
-	private void SetDefautlValues()
+	private void SetDefaultValues()
 	{
 		if (ImageMaterialDynamicInstance != nullptr)
 		{
 			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, 1.0f);
 			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, 1.0f);
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, 1.0f);
+			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, 0.0f);
 		}
 
 		CachedMaterialValue = 1.0f;
 		CachedMaterialValueOffset = 1.0f;
 	}
 
-	private FVector2D GetPercentOffsetRange()
+	private float SegmentRound(float In)
 	{
-		FVector2D Result;
-		float OutValue = ImageMaterialDynamicInstance.GetScalarParameterValue(ProgressBarMaterialParams::Value);
-		float OutValueOffset = ImageMaterialDynamicInstance.GetScalarParameterValue(ProgressBarMaterialParams::ValueOffset);
-
-		if (OutValue > OutValueOffset)
-		{
-			return FVector2D(OutValueOffset, OutValue);
-		}
-		else
-		{
-			return FVector2D(OutValue, OutValueOffset);
-		}
+		return bAlwaysFillSegments ? Math::RoundToInt(In * SegmentNumber) / SegmentNumber : In;
 	}
 }

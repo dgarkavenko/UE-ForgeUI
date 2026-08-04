@@ -17,7 +17,7 @@ enum class EFUInputMode : uint8
  * Base activatable widget with simplified input mode configuration.
  */
 UCLASS()
-class FORGERYUI_API UFUActivatableWidget : public UCommonActivatableWidget
+	class FORGERYUI_API UFUActivatableWidget : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
