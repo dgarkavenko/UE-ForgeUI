@@ -7,10 +7,16 @@ class UFUButton : UFUButtonBase
 	UCommonBorder Border;
 
 	UPROPERTY(BindWidgetOptional)
+	UCommonBorder BorderBorder;
+
+	UPROPERTY(BindWidgetOptional)
 	UPanelWidget SelectionElement;
 
 	UPROPERTY(BindWidgetOptional)
 	UCommonLazyImage Pic;
+
+	UPROPERTY(BindWidgetOptional)
+	UProgressBar HoldFill;
 
 	UPROPERTY()
 	TArray<TSoftObjectPtr<UTexture2D>> PicTextures;
@@ -35,10 +41,19 @@ class UFUButton : UFUButtonBase
 			Border.SetBrush(Brush);
 		}
 
+		if (BorderBorder != nullptr)
+		{
+			FLinearColor Color = Label.ColorAndOpacity.SpecifiedColor;
+			Color.A = bIsEnabled ? Label.ColorAndOpacity.SpecifiedColor.A : 0;
+			BorderBorder.SetBrushColor(Color);
+		}
+
 		if (Pic != nullptr)
 		{
 			Pic.SetBrushTintColor(FSlateColor(Label.ColorAndOpacity));
 		}
+
+		UpdatePicImage();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -73,19 +88,22 @@ class UFUButton : UFUButtonBase
 		UpdatePicImage();
 	}
 
-
+	// Normalized 0..1 from CommonUI's hold ticker; also driven back down by hold rollback.
 	UFUNCTION(BlueprintOverride)
-	void UpdateButtonStyle()
+	void OnActionProgress(float HeldPercent)
 	{
-		UpdatePicImage();
+		if (HoldFill != nullptr)
+		{
+			HoldFill.SetPercent(HeldPercent);
+		}
 	}
 
 	void UpdatePicImage()
 	{
 		if (Pic != nullptr)
 		{
-			int32 Index = !IsEnabled ? 2 : Selected ? 0 : 1;
-			Pic.SetBrushFromSoftTexture(PicTextures[Index]);
+			int32 Index = (!IsEnabled || Locked) ? 2 : Selected ? 0 : 1;
+			Pic.SetBrushFromSoftTexture(PicTextures[Index]);			
 		}		
 	}
 }

@@ -97,6 +97,10 @@ UCommonUIExtensions::PushContentToLayer_ForPlayer(
 | `UFUActivatableWidget` | `UCommonActivatableWidget` | Activatable widget with simplified input mode config (Default/Game/Menu/GameAndMenu) |
 | `UFUButtonBase` | `UCommonButtonBase` | Button with text override, input-method-aware text refresh, and style callbacks |
 
+## Planned color schemes
+
+ForgeryUI will use a composed `UUserWidgetExtension` context to inherit `UFUColorScheme` assets across activatable widgets, regular user widgets, and buttons while remaining available to Widget Blueprint Designer previews. See [ForgeryUI Color Scheme Context](Docs/FUColorSchemeContext.md).
+
 ## Dependencies
 
 - **CommonUI** (Engine Plugin)
