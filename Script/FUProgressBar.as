@@ -111,14 +111,13 @@ class UFUProgressBar : UUserWidget
 	UFUNCTION(BlueprintOverride)
 	void PreConstruct(bool IsDesignTime)
 	{
-		TryInstantiateMaterial();
-		UpdateStyle();
-	}
+		if (!TryInstantiateMaterial())
+		{
+			return;
+		}
 
-	UFUNCTION(BlueprintOverride)
-	void Construct()
-	{
-		SetDefaultValues();
+		UpdateStyle();
+		SyncMaterialToValue();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -273,16 +272,6 @@ class UFUProgressBar : UUserWidget
 
 	private void UpdateStyle()
 	{
-		if (ImageMaterialDynamicInstance == nullptr)
-		{
-			if (!TryInstantiateMaterial())
-			{
-				return;
-			}
-
-			SetDefaultValues();
-		}
-
 		ImageMaterialDynamicInstance.SetVectorParameterValue(ProgressBarMaterialParams::BackgroundColor, BackgroundColor);
 		ImageMaterialDynamicInstance.SetVectorParameterValue(ProgressBarMaterialParams::FillColor1, FillColor1);
 		ImageMaterialDynamicInstance.SetVectorParameterValue(ProgressBarMaterialParams::FillColor2, FillColor2);
@@ -304,17 +293,17 @@ class UFUProgressBar : UUserWidget
 		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::SegmentSmoothnessSide2, EndSmoothness);
 	}
 
-	private void SetDefaultValues()
+	private void SyncMaterialToValue()
 	{
-		if (ImageMaterialDynamicInstance != nullptr)
-		{
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, 1.0f);
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, 1.0f);
-			ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, 0.0f);
-		}
+		float SegmentRoundedValue = SegmentRound(Value);
 
-		CachedMaterialValue = 1.0f;
-		CachedMaterialValueOffset = 1.0f;
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::Value, SegmentRoundedValue);
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::ValueOffset, SegmentRoundedValue);
+		ImageMaterialDynamicInstance.SetScalarParameterValue(ProgressBarMaterialParams::IsDamaged, 0.0f);
+
+		CachedMaterialValue = SegmentRoundedValue;
+		CachedMaterialValueOffset = SegmentRoundedValue;
+		bPreviewActive = false;
 	}
 
 	private float SegmentRound(float In)
